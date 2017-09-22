@@ -3,21 +3,18 @@
  ******************************************************************************/
 package it.geosolutions.java2d;
 
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import org.jfree.fx.FXGraphics2D;
 
@@ -25,11 +22,13 @@ import org.jfree.fx.FXGraphics2D;
  *
  * @author bourgesl
  */
-public class MapDemoFXApplication extends Application {
+public final class MapDemoFXApplication extends Application {
+
+    private final static Logger logger = Logger.getLogger(MapDemoFXApplication.class.getName());
 
     // 1800 x 900 for Full-HD
     //  976 x 640 for XGA
-    final static int WIDTH = 1800;
+    final static int WIDTH = 1600;
     final static int HEIGHT = 900;
 
     // members:
@@ -49,64 +48,77 @@ public class MapDemoFXApplication extends Application {
     }
 
     @Override
-    public void stop() throws Exception {
-        super.stop();
-
-        this.bench.showResults();
+    public void stop() {
+        try {
+            super.stop();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        } finally {
+            this.bench.showResults();
+        }
     }
 
     @Override
     public void start(Stage stage) throws Exception {
-        stage.setTitle(getClass().getSimpleName());
-
-        BorderPane root = new BorderPane();
-
         canvas = new ChartCanvas();
         gc = canvas.getGraphicsContext2D();
 
-        toolBar = new ToolBar();
-        root.setTop(toolBar);
-
-        StackPane stackPane = new StackPane();
+        final StackPane stackPane = new StackPane();
         stackPane.getChildren().add(canvas);
         // Bind canvas size to stack pane size. 
         canvas.widthProperty().bind(stackPane.widthProperty());
         canvas.heightProperty().bind(stackPane.heightProperty());
 
+        final BorderPane root = new BorderPane();
         root.setCenter(stackPane);
 
+        toolBar = new ToolBar();
+        root.setTop(toolBar);
+
         {
+            final Font font = new Font(40);
             // Frame rate:
             Label label = new Label("Frame rate:");
+            label.setFont(font);
             frameRate = new Label();
-            frameRate.setAlignment(Pos.BASELINE_LEFT);
-/*            
-            frameRate.setPrefColumnCount(5);
-            frameRate.setEditable(false);
-*/
+            frameRate.setFont(font);
+
             toolBar.getItems().addAll(label, frameRate);
         }
 
-        Scene scene = new Scene(root, WIDTH, HEIGHT);
-
-        stage.setTitle("MapDemo-FX: " + BaseTest.getRenderingEngineName());
+        final Scene scene = new Scene(root, WIDTH, HEIGHT);
+        stage.setTitle("MapDemo-FX ");
         stage.setScene(scene);
         stage.show();
 
         final AnimationTimer timer = new AnimationTimer() {
-            private long nextSecond = 0;
-            private int framesPerSecond = 0;
+            private int nbFrames = 0;
+            private long lastTime = System.nanoTime();
+            private long lastSecond = lastTime;
+            private long nextSecond = lastTime + 500_000_000L;
 
             @Override
             public void handle(long startNanos) {
-                render(startNanos);
+                final long elapsed = startNanos - lastTime;
+                lastTime = startNanos;
 
-                framesPerSecond++;
+                if (render(startNanos, elapsed)) {
+                    stop();
+                    try {
+                        MapDemoFXApplication.this.stop();
+                    } catch (Exception ex) {
+                        Logger.getLogger(MapDemoFXApplication.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+                nbFrames++;
 
                 if (startNanos > nextSecond) {
-                    // TODO: collect values
-                    frameRate.setText(String.format("%d", framesPerSecond));
-                    framesPerSecond = 0;
+                    frameRate.setText(String.format("%.3f", 1e9 * nbFrames / (startNanos - lastSecond)));
+
+                    // reset
+                    nbFrames = 0;
+                    lastSecond = startNanos;
                     nextSecond = startNanos + 1_000_000_000L;
                 }
             }
@@ -115,32 +127,29 @@ public class MapDemoFXApplication extends Application {
         timer.start();
     }
 
-    private final void clearBackground() {
-        gc.setFill(Color.LIGHTGRAY);
-        gc.fillRect(0, 0, WIDTH, HEIGHT);
-    }
-
-    private final void render(long startNanos) {
+    private boolean render(final long startNanos, final long elapsed) {
         try {
             // clearBackground();
-
-            bench.render(canvas.g2, startNanos);
-        } catch (IOException ex) {
-            Logger.getLogger(MapDemoFXApplication.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(MapDemoFXApplication.class.getName()).log(Level.SEVERE, null, ex);
+            return bench.render(canvas.g2, startNanos, elapsed);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "failure", e);
         }
+        return true;
     }
 
-    class ChartCanvas extends Canvas {
+    final class ChartCanvas extends Canvas {
 
-        FXGraphics2D g2;
+        final FXGraphics2D g2;
 
-        public ChartCanvas() {
+        ChartCanvas() {
             this.g2 = new FXGraphics2D(getGraphicsContext2D());
             // Redraw canvas when size changes.
-            widthProperty().addListener(e -> render(System.nanoTime()));
-            heightProperty().addListener(e -> render(System.nanoTime()));
+            widthProperty().addListener(e -> setClip());
+            heightProperty().addListener(e -> setClip());
+        }
+
+        void setClip() {
+            g2.setClip(0, 0, (int) getWidth(), (int) getHeight());
         }
 
         @Override
@@ -149,12 +158,12 @@ public class MapDemoFXApplication extends Application {
         }
 
         @Override
-        public double prefWidth(double height) {
+        public double prefWidth(double width) {
             return getWidth();
         }
 
         @Override
-        public double prefHeight(double width) {
+        public double prefHeight(double height) {
             return getHeight();
         }
     }
