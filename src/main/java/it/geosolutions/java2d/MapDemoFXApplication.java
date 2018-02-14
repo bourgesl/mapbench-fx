@@ -9,7 +9,6 @@ import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.BorderPane;
@@ -28,8 +27,8 @@ public final class MapDemoFXApplication extends Application {
 
     // 1800 x 900 for Full-HD
     //  976 x 640 for XGA
-    final static int WIDTH = 1600;
-    final static int HEIGHT = 900;
+    final static int WIDTH = Integer.getInteger("fxdemo.width", 1600);
+    final static int HEIGHT = Integer.getInteger("fxdemo.height", 900);
 
     // members:
     private MapDemoFX bench;
@@ -37,7 +36,6 @@ public final class MapDemoFXApplication extends Application {
     private Label frameRate;
 
     private ChartCanvas canvas;
-    private GraphicsContext gc;
 
     @Override
     public void init() throws Exception {
@@ -61,7 +59,6 @@ public final class MapDemoFXApplication extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         canvas = new ChartCanvas();
-        gc = canvas.getGraphicsContext2D();
 
         final StackPane stackPane = new StackPane();
         stackPane.getChildren().add(canvas);
@@ -94,8 +91,8 @@ public final class MapDemoFXApplication extends Application {
         final AnimationTimer timer = new AnimationTimer() {
             private int nbFrames = 0;
             private long lastTime = System.nanoTime();
-            private long lastSecond = lastTime;
-            private long nextSecond = lastTime + 500_000_000L;
+            private long lastInstant = lastTime;
+            private long nextInstant = lastTime + 500_000_000L;
 
             @Override
             public void handle(long startNanos) {
@@ -113,13 +110,13 @@ public final class MapDemoFXApplication extends Application {
 
                 nbFrames++;
 
-                if (startNanos > nextSecond) {
-                    frameRate.setText(String.format("%.3f", 1e9 * nbFrames / (startNanos - lastSecond)));
+                if (startNanos > nextInstant) {
+                    frameRate.setText(String.format("%.3f", 5e8 * nbFrames / (startNanos - lastInstant)));
 
                     // reset
                     nbFrames = 0;
-                    lastSecond = startNanos;
-                    nextSecond = startNanos + 1_000_000_000L;
+                    lastInstant = startNanos;
+                    nextInstant = startNanos + 500_000_000L;
                 }
             }
         };

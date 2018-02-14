@@ -6,7 +6,6 @@ package it.geosolutions.java2d;
 import static it.geosolutions.java2d.BaseTest.getSortedFiles;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.PathIterator;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -124,8 +123,6 @@ public final class MapDemoFX extends BenchTest {
             System.out.println("Loading drawing commands from file: " + file.getAbsolutePath());
             commands = DrawingCommands.load(file);
 
-            // set view transform once:
-            // commands.setAt(viewAT);
             System.out.println("drawing[" + file.getName() + "][width = " + commands.getWidth()
                     + ", height = " + commands.getHeight() + "] ...");
 
@@ -134,7 +131,7 @@ public final class MapDemoFX extends BenchTest {
             }
 
             commands.setAt(null);
-            commands.prepareCommands(MapConst.doClip, MapConst.doUseWingRuleEvenOdd, PathIterator.WIND_EVEN_ODD);
+            commands.prepareCommands(MapConst.doClip, MapConst.doUseWindingRule, MapConst.customWindingRule);
             commands.setAt(null);
 
             commands.prepareWindow(MapDemoFXApplication.WIDTH, MapDemoFXApplication.HEIGHT);
