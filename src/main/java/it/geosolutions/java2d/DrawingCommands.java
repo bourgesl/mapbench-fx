@@ -153,7 +153,7 @@ public final class DrawingCommands implements Serializable {
         }
         final int w = image.getWidth(null);
         final int h = image.getHeight(null);
-        
+
         prepareWindow(w, h);
 
         return graphics;

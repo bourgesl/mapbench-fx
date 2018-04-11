@@ -2,7 +2,7 @@
  * FXGraphics2D
  * ============
  * 
- * (C)opyright 2014-2016, by Object Refinery Limited.
+ * (C)opyright 2014-2017, by Object Refinery Limited.
  * 
  * http://www.jfree.org/fxgraphics2d/index.html
  *
@@ -43,8 +43,8 @@ import java.awt.RenderingHints;
  * Defines the rendering hints that can be used with the {@link FXGraphics2D} 
  * class.  There is just one hint defined at present:<br>
  * <ul>
- * <li>{@link #KEY_USE_FX_FONT_METRICS} that controls whether the 
- * generate output (regular text or vector graphics);</li>
+ * <li>{@link #KEY_USE_FX_FONT_METRICS} that controls whether JavaFX font
+ * metrics or Java2D font metrics are used.</li>
  * </ul>
  * 
  * @since 1.5
@@ -57,9 +57,9 @@ public final class FXHints {
     
     /**
      * The key for the hint that controls whether JavaFX font metrics are
-     * used (better matching to rendering engine, but relies on deprecated API) 
-     * or Java2D font metrics.  A {@code Boolean} value (or {@code null}) can 
-     * be assigned as the value for this key.
+     * used (better matching to rendering engine) or Java2D font metrics.  
+     * A {@code Boolean} value (or {@code null}) can be assigned as the value 
+     * for this key.
      */
     public static final FXHints.Key KEY_USE_FX_FONT_METRICS 
             = new FXHints.Key(0);

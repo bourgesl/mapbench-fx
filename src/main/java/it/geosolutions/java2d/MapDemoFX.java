@@ -102,7 +102,7 @@ public final class MapDemoFX extends BenchTest {
     }
 
     void resetAnimTx() {
-        // Prepare view transformation:
+        // Prepare the animation affine transform:
         animAt = getProfileViewTransform(null);
         if (animAt == null) {
             animAt = new AffineTransform();
@@ -114,7 +114,6 @@ public final class MapDemoFX extends BenchTest {
         hx = cx - MapDemoFXApplication.WIDTH  / (animAt.getScaleX() * 2.0);
         hy = cy - MapDemoFXApplication.HEIGHT / (animAt.getScaleY() * 2.0);
 
-        // translate after ?
         animAt.translate(-hx, -hy);
     }
 

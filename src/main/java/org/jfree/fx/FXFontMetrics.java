@@ -2,7 +2,7 @@
  * FXGraphics2D
  * ============
  * 
- * (C)opyright 2014-2016, by Object Refinery Limited.
+ * (C)opyright 2014-2017, by Object Refinery Limited.
  * 
  * http://www.jfree.org/fxgraphics2d/index.html
  *
@@ -37,22 +37,21 @@
 
 package org.jfree.fx;
 
-import com.sun.javafx.geom.BaseBounds;
-import com.sun.javafx.tk.Toolkit;
-import com.sun.javafx.scene.text.TextLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.text.CharacterIterator;
-import javafx.scene.canvas.GraphicsContext;
+import javafx.geometry.Bounds;
+import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 
 /**
  * A font metrics implementation for JavaFX.  This uses the JavaFX APIs to
  * get font measurements, which is more exact than relying on the equivalent
- * Java2D APIs...the only issue is that we need to call non-public API to 
- * get these measurements.
+ * Java2D APIs.
  * 
  * @since 1.5
  */
@@ -60,21 +59,15 @@ public class FXFontMetrics extends FontMetrics {
     
     private Graphics2D g2;
     
-    private GraphicsContext ctx;
-    
-    private TextLayout layout = Toolkit.getToolkit().getTextLayoutFactory().createLayout();
-    
     /**
      * Creates a new instance.
      * 
      * @param font  the font ({@code null} not permitted).
      * @param g2  the graphics target ({@code null} not permitted).
-     * @param ctx  the graphics context ({@code null} not permitted).
      */
-    public FXFontMetrics(Font font, Graphics2D g2, GraphicsContext ctx) {
+    public FXFontMetrics(Font font, Graphics2D g2) {
         super(font);
         this.g2 = g2;
-        this.ctx = ctx;
     }
 
     @Override
@@ -105,10 +98,16 @@ public class FXFontMetrics extends FontMetrics {
 
     @Override
     public Rectangle2D getStringBounds(String str, Graphics context) {
-        this.layout.setContent(str, this.ctx.getFont().impl_getNativeFont());
-        this.layout.setBoundsType(TextLayout.TYPE_BASELINE);
-        BaseBounds bb = this.layout.getBounds();
-        return new Rectangle2D.Double(bb.getMinX(), bb.getMinY(), bb.getWidth(), bb.getHeight());
+        Text text = new Text(str);
+        FontWeight weight = font.isBold() ? FontWeight.BOLD : FontWeight.NORMAL;
+        FontPosture posture = font.isItalic() 
+                ? FontPosture.ITALIC : FontPosture.REGULAR;
+        javafx.scene.text.Font jfxfont = javafx.scene.text.Font.font(
+                font.getFamily(), weight, posture, font.getSize());
+        text.setFont(jfxfont);
+        Bounds b = text.getLayoutBounds();
+        return new Rectangle2D.Double(b.getMinX(), b.getMinY(), b.getWidth(), 
+                b.getHeight());
     }
 
     @Override

@@ -2,7 +2,7 @@
  * FXGraphics2D
  * ============
  * 
- * (C)opyright 2014-2016, by Object Refinery Limited.
+ * (C)opyright 2014-2017, by Object Refinery Limited.
  * 
  * http://www.jfree.org/fxgraphics2d/index.html
  *
@@ -37,7 +37,6 @@
 
 package org.jfree.fx;
 
-import com.sun.javafx.tk.Toolkit;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -191,6 +190,9 @@ public class FXGraphics2D extends Graphics2D {
      * metrics.  Used in the getFontMetrics(Font f) method.
      */
     private Graphics2D fmImageG2;
+    
+    /** The FXFontMetrics. */
+    private FXFontMetrics fxFontMetrics;
 
     /** 
      * The device configuration (this is lazily instantiated in the 
@@ -224,6 +226,7 @@ public class FXGraphics2D extends Graphics2D {
         this.zeroStrokeWidth = 0.5;
         this.hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING, 
                 RenderingHints.VALUE_ANTIALIAS_DEFAULT);
+        this.hints.put(FXHints.KEY_USE_FX_FONT_METRICS, true);
     }
     
     /**
@@ -551,7 +554,7 @@ public class FXGraphics2D extends Graphics2D {
         if (s == this.stroke) { // quick test, full equals test later
             return;
         }
-        if (stroke instanceof BasicStroke) {
+        if (s instanceof BasicStroke) {
             BasicStroke bs = (BasicStroke) s;
             if (bs.equals(this.stroke)) {
                 return; // no change
@@ -622,8 +625,7 @@ public class FXGraphics2D extends Graphics2D {
     }
 
     /**
-     * Returns the current value for the specified hint.  Note that all hints
-     * are currently ignored in this implementation.
+     * Returns the current value for the specified hint.
      * 
      * @param hintKey  the hint key ({@code null} permitted, but the
      *     result will be {@code null} also in that case).
@@ -872,15 +874,9 @@ public class FXGraphics2D extends Graphics2D {
     }
 
     /**
-     * Returns the font metrics for the specified font.  There are two
-     * possibilities here.  First, if the rendering hint
-     * {@link FXHints#KEY_USE_FX_FONT_METRICS} is set with the value
-     * {@code Boolean.TRUE}, then this method will return an instance of
-     * {@link FXFontMetrics}.  This is generally more precise, but on the
-     * downside requires calling some non-public API.  Without this rendering
-     * hint, the font metrics returned are from Java2D (via an internal 
-     * {@code BufferedImage} (this does not always match exactly the font
-     * metrics used by JavaFX).
+     * Returns the font metrics for the specified font.  The font metrics 
+     * returned are from Java2D (via an internal {@code BufferedImage}) which 
+     * does not always match exactly the font metrics used by JavaFX.
      * 
      * @param f  the font.
      * 
@@ -888,12 +884,14 @@ public class FXGraphics2D extends Graphics2D {
      */
     @Override
     public FontMetrics getFontMetrics(Font f) {
-
-        Boolean b = (Boolean) getRenderingHint(FXHints.KEY_USE_FX_FONT_METRICS);
-        if (Boolean.TRUE.equals(b)) {
-            return new FXFontMetrics(f, this, this.gc);
-        }
-
+        if (getRenderingHint(FXHints.KEY_USE_FX_FONT_METRICS) == Boolean.TRUE) {
+            if (this.fxFontMetrics == null 
+                    || !f.equals(this.fxFontMetrics.getFont())) {
+                this.fxFontMetrics = new FXFontMetrics(this.font, this);
+            }
+            return this.fxFontMetrics;
+        } 
+        
         // be lazy about creating the underlying objects...
         if (this.fmImage == null) {
             this.fmImage = new BufferedImage(10, 10,
