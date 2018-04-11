@@ -29,6 +29,7 @@ public final class MapDemoFXApplication extends Application {
     //  976 x 640 for XGA
     final static int WIDTH = Integer.getInteger("fxdemo.width", 1600);
     final static int HEIGHT = Integer.getInteger("fxdemo.height", 900);
+    final static int MARGIN = 2 * 40;
 
     // members:
     private MapDemoFX bench;
@@ -58,13 +59,15 @@ public final class MapDemoFXApplication extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        canvas = new ChartCanvas();
+        canvas = new ChartCanvas(WIDTH, HEIGHT);
 
         final StackPane stackPane = new StackPane();
         stackPane.getChildren().add(canvas);
-        // Bind canvas size to stack pane size. 
-        canvas.widthProperty().bind(stackPane.widthProperty());
-        canvas.heightProperty().bind(stackPane.heightProperty());
+        if (false) {
+            // Bind canvas size to stack pane size. 
+            canvas.widthProperty().bind(stackPane.widthProperty());
+            canvas.heightProperty().bind(stackPane.heightProperty());
+        }
 
         final BorderPane root = new BorderPane();
         root.setCenter(stackPane);
@@ -83,7 +86,7 @@ public final class MapDemoFXApplication extends Application {
             toolBar.getItems().addAll(label, frameRate);
         }
 
-        final Scene scene = new Scene(root, WIDTH, HEIGHT);
+        final Scene scene = new Scene(root, WIDTH + MARGIN, HEIGHT + MARGIN);
         stage.setTitle("MapDemo-FX ");
         stage.setScene(scene);
         stage.show();
@@ -138,7 +141,8 @@ public final class MapDemoFXApplication extends Application {
 
         final FXGraphics2D g2;
 
-        ChartCanvas() {
+        ChartCanvas(double w, double h) {
+            super(w, h);
             this.g2 = new FXGraphics2D(getGraphicsContext2D());
             // Redraw canvas when size changes.
             widthProperty().addListener(e -> setClip());

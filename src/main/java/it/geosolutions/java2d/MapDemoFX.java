@@ -101,11 +101,28 @@ public final class MapDemoFX extends BenchTest {
     void prepare() {
     }
 
+    void resetAnimTx() {
+        // Prepare view transformation:
+        animAt = getProfileViewTransform(null);
+        if (animAt == null) {
+            animAt = new AffineTransform();
+        }
+        // fix transform combinations:
+        cx = commands.width / 2.0;
+        cy = commands.height / 2.0;
+        
+        hx = cx - MapDemoFXApplication.WIDTH  / (animAt.getScaleX() * 2.0);
+        hy = cy - MapDemoFXApplication.HEIGHT / (animAt.getScaleY() * 2.0);
+
+        // translate after ?
+        animAt.translate(-hx, -hy);
+    }
+
     boolean render(Graphics2D g2, long now, long elapsed) throws IOException, ClassNotFoundException {
         // Prepare
         if (file == null) {
             file = dataFiles[iterFile];
-                    /*
+            /*
             [../maps/CircleTests.ser, 
             ../maps/EllipseTests-fill-false.ser, 
             ../maps/EllipseTests-fill-true.ser, 
@@ -118,7 +135,7 @@ public final class MapDemoFX extends BenchTest {
             ../maps/dc_topp:states_2013-11-30-06-11-06.ser, 
             ../maps/dc_topp:states_2013-11-30-06-11-07.ser, 
             ../maps/test_z_625k.ser]
-                     */
+             */
 
             System.out.println("Loading drawing commands from file: " + file.getAbsolutePath());
             commands = DrawingCommands.load(file);
@@ -137,13 +154,7 @@ public final class MapDemoFX extends BenchTest {
             commands.prepareWindow(MapDemoFXApplication.WIDTH, MapDemoFXApplication.HEIGHT);
 
             // Prepare the animation affine transform:
-            cx = (commands.width / 2.0);
-            cy = (commands.height / 2.0);
-            hx = Math.max(0, cx - MapDemoFXApplication.WIDTH / 2.0);
-            hy = Math.max(0, cy - MapDemoFXApplication.HEIGHT / 2.0);
-
-            animAt = new AffineTransform();
-            animAt.translate(-hx, -hy);
+            resetAnimTx();
         }
 
         String sRes;
@@ -260,8 +271,7 @@ public final class MapDemoFX extends BenchTest {
                 nanoss = new long[nOps];
 
                 // reset AT:
-                animAt = new AffineTransform();
-                animAt.translate(-hx, -hy);
+                resetAnimTx();
 
             } else if (iter == nOps) {
                 res = new Result(commands.name, 1, nOps, opss, nanoss);
@@ -292,7 +302,7 @@ public final class MapDemoFX extends BenchTest {
                     // transition to Init                
                     state = State.Init;
                     iter = 0;
-                    
+
                     return false;
                 } else {
                     return true;
