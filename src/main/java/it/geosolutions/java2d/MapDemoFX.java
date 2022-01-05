@@ -19,7 +19,7 @@ import javafx.application.Application;
 @SuppressWarnings("UseOfSystemOutOrSystemErr")
 public final class MapDemoFX extends BenchTest {
 
-    enum State {
+    public enum State {
         BootWarmup,
         Init,
         WarmupTest,
@@ -30,6 +30,20 @@ public final class MapDemoFX extends BenchTest {
 
     public static void main(String[] args) throws Exception {
         Locale.setDefault(Locale.US);
+
+        /*
+         * Workaround to set system properties in GraalVM / Substrate VM (native images)
+         */
+        setDefaultSystemProperty("javafx.verbose", "true");
+        setDefaultSystemProperty("prism.verbose", "true");
+        setDefaultSystemProperty("javafx.animation.fullspeed", "true");
+
+        setDefaultSystemProperty("prism.marlin.log", "true");
+        setDefaultSystemProperty("prism.marlin.useRef", "hard"); // hard or soft (default) / weak references
+
+        setDefaultSystemProperty("prism.marlin.doStats", "false");
+
+        System.out.println("System properties:\n" + System.getProperties());
 
         if (!BenchTest.useSharedImage) {
             System.out.println("Please set useSharedImage = true in your profile !");
@@ -42,6 +56,12 @@ public final class MapDemoFX extends BenchTest {
         INSTANCE = new MapDemoFX();
 
         Application.launch(MapDemoFXApplication.class, args);
+    }
+
+    private static void setDefaultSystemProperty(String key, String value) {
+        if (System.getProperty(key) == null) {
+            System.setProperty(key, value);
+        }
     }
 
     // members:
@@ -110,8 +130,8 @@ public final class MapDemoFX extends BenchTest {
         // fix transform combinations:
         cx = commands.width / 2.0;
         cy = commands.height / 2.0;
-        
-        hx = cx - MapDemoFXApplication.WIDTH  / (animAt.getScaleX() * 2.0);
+
+        hx = cx - MapDemoFXApplication.WIDTH / (animAt.getScaleX() * 2.0);
         hy = cy - MapDemoFXApplication.HEIGHT / (animAt.getScaleY() * 2.0);
 
         animAt.translate(-hx, -hy);
@@ -159,7 +179,7 @@ public final class MapDemoFX extends BenchTest {
         String sRes;
 
         if (state == State.BootWarmup) {
-            if (iter == nOps) {
+            if ((nOps != -1) && (iter >= nOps)) {
                 res = new Result(commands.name, 1, nOps, opss, nanoss);
                 res.totalTime = Result.toMillis(now - lastStartTime);
 
@@ -203,7 +223,7 @@ public final class MapDemoFX extends BenchTest {
                 opss = new long[nOps];
                 nanoss = new long[nOps];
 
-            } else if (iter == nOps) {
+            } else if (iter >= nOps) {
                 res = new Result(commands.name, 1, nOps, opss, nanoss);
                 res.totalTime = Result.toMillis(now - lastStartTime);
 
@@ -231,7 +251,7 @@ public final class MapDemoFX extends BenchTest {
 
                 System.out.println("\nWarming up " + testLoops + " loops on " + file.getAbsolutePath());
 
-            } else if (iter == nOps) {
+            } else if (iter >= nOps) {
                 BaseTest.isWarmup = false;
 
                 res = new Result(commands.name, 1, nOps, opss, nanoss);
@@ -272,7 +292,7 @@ public final class MapDemoFX extends BenchTest {
                 // reset AT:
                 resetAnimTx();
 
-            } else if (iter == nOps) {
+            } else if (iter >= nOps) {
                 res = new Result(commands.name, 1, nOps, opss, nanoss);
                 res.totalTime = Result.toMillis(now - lastStartTime);
 
@@ -375,4 +395,21 @@ public final class MapDemoFX extends BenchTest {
         System.out.println("Scores:");
         System.out.println(sbScore.toString());
     }
+
+    public State getState() {
+        return state;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    public int getIter() {
+        return iter;
+    }
+
+    public int getNops() {
+        return nOps;
+    }
+
 }

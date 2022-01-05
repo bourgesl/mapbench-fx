@@ -8,8 +8,8 @@
     <groupId>org.mapbench</groupId>
     <artifactId>mapbench-fx</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.0</version>
-    <name>MapBench JavaFX benchmark</name>
+    <version>0.2.0</version>
+    <name>MapBenchFX</name>
 
     <url>https://github.com/bourgesl/mapbench</url>
 
@@ -19,33 +19,73 @@
 
     <properties>
         <maven.build.timestamp.format>yyyy/MM/dd HH:mm:ss</maven.build.timestamp.format>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>11</java.version>
+        <javafx.version>13.0.2</javafx.version>
+
+        <app.mainClass>it.geosolutions.java2d.MapDemoFX</app.mainClass>
     </properties>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>2.6</version>
+                <version>3.1.0</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.3</version>
+                <version>3.8.1</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <debug>true</debug>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.4</version>
+                <configuration>
+                    <mainClass>${app.mainClass}</mainClass>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.gluonhq</groupId>
+                <artifactId>client-maven-plugin</artifactId>
+                <version>0.1.15</version>
+                <configuration>
+                    <target>host</target>
+                    <reflectionList>it.geosolutions.java2d.DrawingCommands,it.geosolutions.java2d.MapDemoFXApplication,org.jfree.fx.FXFontMetrics,org.jfree.fx.FXGraphics2D,org.jfree.fx.FXGraphicsConfiguration,org.jfree.fx.FXGraphicsDevice,org.jfree.fx.FXHints</reflectionList>
+                    <!-- -H:+ReportExceptionStackTraces -H:+ParseRuntimeOptions -H:+PrintClassInitialization -->
+                    <nativeImageArgs>-H:+ParseRuntimeOptions,-H:+TraceClassInitialization</nativeImageArgs>
+                    <!-- Uncomment to run on iOS: -->
+                    <!-- <target>ios</target>-->
+                    <mainClass>${app.mainClass}</mainClass>
+                    <verbose>true</verbose>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.6</version>
+                <version>3.2.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -57,16 +97,25 @@
                     </archive>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 
     <dependencies>
-
         <dependency>
             <groupId>org.mapbench</groupId>
             <artifactId>mapbench</artifactId>
             <version>0.5.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${javafx.version}</version>
         </dependency>
 
         <dependency>
@@ -82,5 +131,12 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>gluon-releases</id>
+            <url>http://nexus.gluonhq.com/nexus/content/repositories/releases/</url>
+        </pluginRepository>
+    </pluginRepositories>
 </project>
 
